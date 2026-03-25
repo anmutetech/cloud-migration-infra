@@ -8,7 +8,6 @@ helm repo update
 helm uninstall monitoring -n monitoring
 
 helm install monitoring prometheus-community/kube-prometheus-stack \
--f monitoring/prometheus-values.yaml \
 -f monitoring/values.yaml \
 -n monitoring \
 --create-namespace
