@@ -68,11 +68,16 @@ jobs:
         --region us-east-1 \
         --name migration-eks-cluster || true
 
-      #- name: Pre-clean Kubernetes (IMPORTANT)
-        run: |
-         kubectl get nodes || true
-         kubectl delete svc --all -A || true
-         echo "Waiting for AWS to delete load balancers..."
+    - name: Pre-clean Kubernetes (IMPORTANT)
+      if: github.event.inputs.action == 'destroy'
+      run: |
+        kubectl get nodes || true
+        kubectl delete svc --all -A || true
+
+    - name: Wait for LoadBalancer cleanup
+      if: github.event.inputs.action == 'destroy'
+      run: |
+        echo "Waiting for AWS to delete load balancers..."
          sleep 180
 
     - name: Force delete remaining Load Balancers
@@ -85,6 +90,8 @@ jobs:
           aws elbv2 delete-load-balancer --load-balancer-arn $lb || true
         done
 
+    - name: Terraform Destroy
+      if: github.event.inputs.action == 'destroy'
       run: |
         cd terraform
         terraform destroy -target=module.eks -auto-approve
